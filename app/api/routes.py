@@ -26,19 +26,27 @@ class PondSiteSchema(BaseModel):
     lat: float
     lon: float
     elevation_m: float
+    flow_accumulation_cells: int
 
 
 class CatchmentSchema(BaseModel):
     area_m2: float
     area_hectares: float
     mean_slope_pct: float
+    max_slope_pct: float
+    min_elevation_m: float
+    max_elevation_m: float
+    relief_m: float
+    watershed_cell_count: int
     boundary_geojson: dict
 
 
 class AnalyzeContourResponse(BaseModel):
     contour_interval_m: float
     elevation_range_m: list[float] = Field(..., min_length=2, max_length=2)
+    total_contour_lines: int
     grid_resolution_m: float
+    grid_shape: list[int] = Field(..., min_length=2, max_length=2)
     resolution_auto_adjusted: bool
     pond_site: PondSiteSchema
     catchment: CatchmentSchema
@@ -128,17 +136,25 @@ async def analyze_contour(
             round(dataset.elevation_min, 2),
             round(dataset.elevation_max, 2),
         ],
+        total_contour_lines=len(dataset.contours),
         grid_resolution_m=dem_result.resolution_m,
+        grid_shape=[dem_result.rows, dem_result.cols],
         resolution_auto_adjusted=dem_result.resolution_auto_adjusted,
         pond_site=PondSiteSchema(
             lat=catchment.pond_site.lat,
             lon=catchment.pond_site.lon,
             elevation_m=catchment.pond_site.elevation_m,
+            flow_accumulation_cells=catchment.pond_site.flow_accumulation_cells,
         ),
         catchment=CatchmentSchema(
             area_m2=catchment.area_m2,
             area_hectares=catchment.area_hectares,
             mean_slope_pct=catchment.mean_slope_pct,
+            max_slope_pct=catchment.max_slope_pct,
+            min_elevation_m=catchment.min_elevation_m,
+            max_elevation_m=catchment.max_elevation_m,
+            relief_m=catchment.relief_m,
+            watershed_cell_count=catchment.watershed_cell_count,
             boundary_geojson=catchment.boundary_geojson,
         ),
         processing_time_ms=round(elapsed_ms, 1),

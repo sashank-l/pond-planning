@@ -46,6 +46,7 @@ class PondSite:
     lat: float
     lon: float
     elevation_m: float
+    flow_accumulation_cells: int
 
 
 @dataclass
@@ -55,6 +56,11 @@ class CatchmentResult:
     area_m2: float
     area_hectares: float
     mean_slope_pct: float
+    max_slope_pct: float
+    min_elevation_m: float
+    max_elevation_m: float
+    relief_m: float
+    watershed_cell_count: int
     boundary_geojson: dict    # GeoJSON Polygon
 
 
@@ -227,6 +233,7 @@ def select_pond_and_delineate(
     easting, northing = dem_result.cell_to_utm(int(out_r), int(out_c))
     lon, lat = dem_result.utm_to_lonlat(easting, northing)
     elevation_m = float(dem_result.elevation[out_r, out_c])
+    flow_acc_cells = int(terrain.flow_acc[out_r, out_c])
 
     pond_site = PondSite(
         row=int(out_r),
@@ -234,10 +241,19 @@ def select_pond_and_delineate(
         lat=round(lat, 6),
         lon=round(lon, 6),
         elevation_m=round(elevation_m, 2),
+        flow_accumulation_cells=flow_acc_cells,
     )
 
     # ---- Slope statistics over watershed ----
-    mean_slope = float(terrain.slope[mask].mean()) if mask.any() else 0.0
+    ws_slope = terrain.slope[mask]
+    mean_slope = float(ws_slope.mean()) if mask.any() else 0.0
+    max_slope  = float(ws_slope.max())  if mask.any() else 0.0
+
+    # ---- Elevation statistics over watershed ----
+    ws_elev = dem_result.elevation[mask]
+    min_elev = float(ws_elev.min()) if mask.any() else elevation_m
+    max_elev = float(ws_elev.max()) if mask.any() else elevation_m
+    relief   = round(max_elev - min_elev, 2)
 
     # ---- Build catchment polygon ----
     polygon = _mask_to_polygon(mask, dem_result)
@@ -249,5 +265,10 @@ def select_pond_and_delineate(
         area_m2=round(area_m2, 2),
         area_hectares=round(area_ha, 4),
         mean_slope_pct=round(mean_slope, 2),
+        max_slope_pct=round(max_slope, 2),
+        min_elevation_m=round(min_elev, 2),
+        max_elevation_m=round(max_elev, 2),
+        relief_m=relief,
+        watershed_cell_count=watershed_cells,
         boundary_geojson=dict(geojson),
     )

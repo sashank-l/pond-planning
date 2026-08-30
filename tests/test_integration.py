@@ -31,23 +31,37 @@ def test_analyze_contour_sample_kml():
     assert resp.status_code == 200, resp.text
     body = resp.json()
 
-    # Response shape
+    # Top-level fields
     assert "pond_site" in body
     assert "catchment" in body
     assert "elevation_range_m" in body
     assert "contour_interval_m" in body
     assert "processing_time_ms" in body
+    assert "total_contour_lines" in body
+    assert "grid_shape" in body
+    assert isinstance(body["total_contour_lines"], int)
+    assert body["total_contour_lines"] > 0
+    assert len(body["grid_shape"]) == 2
+    assert all(s > 0 for s in body["grid_shape"])
 
-    # Sanity: pond site coordinates should be in the plausible geographic area
+    # Pond site fields
     ps = body["pond_site"]
     assert isinstance(ps["lat"], float)
     assert isinstance(ps["lon"], float)
     assert ps["elevation_m"] > 0
+    assert isinstance(ps["flow_accumulation_cells"], int)
+    assert ps["flow_accumulation_cells"] > 0
 
     # Catchment stats
     catchment = body["catchment"]
     assert catchment["area_m2"] > 0
     assert catchment["area_hectares"] > 0
+    assert catchment["mean_slope_pct"] >= 0
+    assert catchment["max_slope_pct"] >= catchment["mean_slope_pct"]
+    assert catchment["min_elevation_m"] <= catchment["max_elevation_m"]
+    assert catchment["relief_m"] >= 0
+    assert isinstance(catchment["watershed_cell_count"], int)
+    assert catchment["watershed_cell_count"] > 0
     assert catchment["boundary_geojson"]["type"] in {"Polygon", "MultiPolygon"}
 
     # Elevation range

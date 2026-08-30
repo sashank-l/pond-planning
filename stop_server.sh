@@ -6,16 +6,11 @@ APP_DIR="/home/student/pond_panning"
 PID_FILE="$APP_DIR/app.pid"
 PORT=3000
 
-if [ -f "$PID_FILE" ]; then
-    PID=$(cat "$PID_FILE")
-    if kill -0 "$PID" 2>/dev/null; then
-        echo "Stopping Pond API (PID $PID)..."
-        kill "$PID" || true
-        sleep 1
-        kill -9 "$PID" 2>/dev/null || true
-    fi
-    rm -f "$PID_FILE"
-fi
+# Kill runner supervisor and uvicorn processes
+pkill -f "$APP_DIR/runner.sh" 2>/dev/null || true
+pkill -f 'uvicorn app.main:app' 2>/dev/null || true
+fuser -k 3000/tcp 2>/dev/null || true
+fuser -k 3209/tcp 2>/dev/null || true
 
-fuser -k ${PORT}/tcp 2>/dev/null || true
+rm -f "$PID_FILE"
 echo "Pond API stopped."

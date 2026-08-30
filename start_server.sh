@@ -9,29 +9,18 @@ PORT=3000
 
 cd "$APP_DIR"
 
-if [ -f "$PID_FILE" ]; then
-    PID=$(cat "$PID_FILE")
-    if kill -0 "$PID" 2>/dev/null; then
-        echo "Server is already running with PID $PID"
-        exit 0
-    else
-        rm -f "$PID_FILE"
-    fi
-fi
+# Stop any existing processes on 3000 and 3209
+"$APP_DIR/stop_server.sh" 2>/dev/null || true
 
-# Kill any existing process on port 3209 just in case
-fuser -k ${PORT}/tcp 2>/dev/null || true
-
-echo "Starting Pond API on port $PORT..."
-nohup "$APP_DIR/.venv/bin/uvicorn" app.main:app --host 0.0.0.0 --port "$PORT" --workers 1 > "$LOG_FILE" 2>&1 &
+echo "Starting Pond API endlessly on port $PORT..."
+nohup "$APP_DIR/runner.sh" > /dev/null 2>&1 &
 echo $! > "$PID_FILE"
 
-sleep 2
-if kill -0 $(cat "$PID_FILE") 2>/dev/null; then
-    echo "Server started successfully with PID $(cat "$PID_FILE")"
-    echo "Logs at: $LOG_FILE"
+sleep 3
+if fuser ${PORT}/tcp >/dev/null 2>&1 || ss -tulpn | grep -q ":${PORT} "; then
+    echo "Server is running endlessly on port $PORT (Supervisor PID: $(cat "$PID_FILE"))"
+    echo "Logs available at: $LOG_FILE"
 else
-    echo "Server failed to start. Last log lines:"
-    cat "$LOG_FILE"
-    exit 1
+    echo "Server status: checking..."
+    cat "$LOG_FILE" | tail -n 10
 fi

@@ -13,14 +13,13 @@ cd "$APP_DIR"
 "$APP_DIR/stop_server.sh" 2>/dev/null || true
 
 echo "Starting Pond API endlessly on port $PORT..."
-nohup "$APP_DIR/runner.sh" > /dev/null 2>&1 &
-echo $! > "$PID_FILE"
+(nohup "$APP_DIR/runner.sh" </dev/null >/dev/null 2>&1 & echo $! > "$PID_FILE")
 
 sleep 3
 if fuser ${PORT}/tcp >/dev/null 2>&1 || ss -tulpn | grep -q ":${PORT} "; then
-    echo "Server is running endlessly on port $PORT (Supervisor PID: $(cat "$PID_FILE"))"
+    echo "Server is running endlessly on port $PORT"
     echo "Logs available at: $LOG_FILE"
 else
     echo "Server status: checking..."
-    cat "$LOG_FILE" | tail -n 10
+    tail -n 10 "$LOG_FILE"
 fi

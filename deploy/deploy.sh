@@ -4,28 +4,17 @@
 set -euo pipefail
 
 REMOTE="${1:?Usage: $0 <user@host>}"
-DEPLOY_DIR="/opt/pond-api"
-REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
+DEPLOY_DIR="/home/student/pond_panning"
+REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
 echo "==> Syncing code to $REMOTE:$DEPLOY_DIR"
-rsync -av --exclude='.venv' --exclude='__pycache__' --exclude='*.pyc' \
-    --exclude='contours_1m.kml' \
+rsync -av --exclude='.venv' --exclude='__pycache__' --exclude='*.pyc' --exclude='.git' \
     "$REPO_DIR/" "$REMOTE:$DEPLOY_DIR/"
 
 echo "==> Setting up venv and installing dependencies on remote"
 ssh "$REMOTE" bash <<'EOF'
 set -euo pipefail
-cd /opt/pond-api
-
-# Set up swap file if not already present (512 MB safety net)
-if [ ! -f /swapfile ]; then
-  echo "  Creating 512M swap file..."
-  fallocate -l 512M /swapfile
-  chmod 600 /swapfile
-  mkswap /swapfile
-  swapon /swapfile
-  echo '/swapfile none swap sw 0 0' | tee -a /etc/fstab
-fi
+cd /home/student/pond_panning
 
 # Create venv if not present
 if [ ! -d .venv ]; then
@@ -41,17 +30,17 @@ EOF
 echo "==> Installing and restarting systemd service"
 ssh "$REMOTE" bash <<'EOF'
 set -euo pipefail
-cp /opt/pond-api/deploy/pond-api.service /etc/systemd/system/pond-api.service
-systemctl daemon-reload
-systemctl enable pond-api
-systemctl restart pond-api
+sudo cp /home/student/pond_panning/deploy/pond-api.service /etc/systemd/system/pond-api.service
+sudo systemctl daemon-reload
+sudo systemctl enable pond-api
+sudo systemctl restart pond-api
 sleep 2
-systemctl status pond-api --no-pager
+sudo systemctl status pond-api --no-pager
 EOF
 
-echo "==> Smoke test"
+echo "==> Smoke test on port 3209"
 ssh "$REMOTE" bash <<'EOF'
-curl -sf http://127.0.0.1:8000/health && echo "  Health check PASSED" || echo "  Health check FAILED"
+curl -sf http://127.0.0.1:3209/health && echo "  Health check PASSED" || echo "  Health check FAILED"
 EOF
 
-echo "==> Deployment complete!"
+echo "==> Deployment complete! Running on port 3209."

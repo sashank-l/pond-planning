@@ -4,9 +4,9 @@ After=network.target
 
 [Service]
 Type=simple
-User=www-data
-WorkingDirectory=/opt/pond-api
-ExecStart=/opt/pond-api/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1
+User=student
+WorkingDirectory=/home/student/pond_panning
+ExecStart=/home/student/pond_panning/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 3209 --workers 1
 Restart=on-failure
 RestartSec=5
 # Keep memory and CPU reasonable on the constrained box

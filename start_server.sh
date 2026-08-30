@@ -5,7 +5,7 @@ set -euo pipefail
 APP_DIR="/home/student/pond_panning"
 PID_FILE="$APP_DIR/app.pid"
 LOG_FILE="$APP_DIR/uvicorn.log"
-PORT=3209
+PORT=3000
 
 cd "$APP_DIR"
 

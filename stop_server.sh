@@ -4,7 +4,7 @@ set -euo pipefail
 
 APP_DIR="/home/student/pond_panning"
 PID_FILE="$APP_DIR/app.pid"
-PORT=3209
+PORT=3000
 
 if [ -f "$PID_FILE" ]; then
     PID=$(cat "$PID_FILE")

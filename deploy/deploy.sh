@@ -38,9 +38,9 @@ sleep 2
 sudo systemctl status pond-api --no-pager
 EOF
 
-echo "==> Smoke test on port 3209"
+echo "==> Smoke test on port 3000"
 ssh "$REMOTE" bash <<'EOF'
-curl -sf http://127.0.0.1:3209/health && echo "  Health check PASSED" || echo "  Health check FAILED"
+curl -sf http://127.0.0.1:3000/health && echo "  Health check PASSED" || echo "  Health check FAILED"
 EOF
 
-echo "==> Deployment complete! Running on port 3209."
+echo "==> Deployment complete! Running on port 3000."

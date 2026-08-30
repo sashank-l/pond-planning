@@ -6,7 +6,7 @@ After=network.target
 Type=simple
 User=student
 WorkingDirectory=/home/student/pond_panning
-ExecStart=/home/student/pond_panning/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 3209 --workers 1
+ExecStart=/home/student/pond_panning/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 3000 --workers 1
 Restart=on-failure
 RestartSec=5
 # Keep memory and CPU reasonable on the constrained box

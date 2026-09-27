@@ -632,6 +632,29 @@
     }
 
     // -------------------------------------------------------------
+    // Smart Backend URL Resolution
+    // -------------------------------------------------------------
+    function resolveBackendUrl(path) {
+      const host = window.location.hostname || '10.1.75.51';
+      const port = window.location.port;
+      if (port === '4209') {
+        return `${window.location.protocol}//${host}:3209${path}`;
+      } else if (port === '4000') {
+        return `${window.location.protocol}//${host}:3000${path}`;
+      } else if (port === '3209' || port === '3000') {
+        return path;
+      }
+      return `http://${host}:3209${path}`;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const apiInput = document.getElementById('apiUrlInput');
+      if (apiInput) {
+        apiInput.value = resolveBackendUrl('/analyzeContour');
+      }
+    });
+
+    // -------------------------------------------------------------
     // Load Demo Contour
     // -------------------------------------------------------------
     async function loadSampleContour() {
@@ -640,15 +663,15 @@
       btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Fetching Demo File...`;
 
       try {
-        // Fetch from backend /sampleKml
-        const res = await fetch('/sampleKml');
+        const sampleUrl = resolveBackendUrl('/sampleKml');
+        const res = await fetch(sampleUrl);
         if (!res.ok) throw new Error("Failed to load sample contour from backend.");
         const blob = await res.blob();
         selectedFile = new File([blob], "contours_1m.kml", { type: "application/vnd.google-earth.kml+xml" });
         setFile(selectedFile);
         btn.innerHTML = `<i class="fa-solid fa-check"></i> Demo Loaded (6.7MB)`;
       } catch (err) {
-        alert("Notice: Could not load sample KML from /sampleKml. You can upload any .kml file directly.");
+        alert("Notice: Could not load sample KML from backend. You can upload any .kml file directly.");
         btn.innerHTML = `<i class="fa-solid fa-database"></i> Use Demo Contour (6.7MB)`;
       } finally {
         btn.disabled = false;
@@ -664,7 +687,7 @@
         return;
       }
 
-      const apiUrl = document.getElementById('apiUrlInput').value || '/analyzeContour';
+      const apiUrl = document.getElementById('apiUrlInput').value.trim() || resolveBackendUrl('/analyzeContour');
       const resolution = document.getElementById('resolutionInput').value;
       const minArea = document.getElementById('minAreaInput').value;
 

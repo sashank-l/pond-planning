@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Village Pond Planning System</title>
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Leaflet Draw CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --accent: #06b6d4;
+      --bg-dark: #0f172a;
+      --card-bg: rgba(15, 23, 42, 0.85);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #090d16;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      background: #0f172a;
+      border-bottom: 1px solid var(--card-border);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand i {
+      font-size: 24px;
+      color: var(--accent);
+    }
+
+    .brand h1 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .brand span {
+      font-size: 12px;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.08);
+      padding: 2px 8px;
+      border-radius: 999px;
+      margin-left: 8px;
+    }
+
+    .main-container {
+      display: flex;
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #map {
+      flex: 1;
+      height: 100%;
+      background: #1e293b;
+    }
+
+    /* Sidebar controls */
+    .sidebar {
+      width: 420px;
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border-left: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      z-index: 1000;
+      overflow-y: auto;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-section {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .sidebar-section h3 {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--accent);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* File dropzone */
+    .dropzone {
+      border: 2px dashed rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.02);
+      transition: all 0.2s ease;
+    }
+
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--accent);
+      background: rgba(6, 182, 212, 0.06);
+    }
+
+    .dropzone i {
+      font-size: 32px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .dropzone p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .dropzone .file-name {
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--accent);
+      font-weight: 500;
+      word-break: break-all;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .form-control {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      width: 100%;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      filter: brightness(1.1);
+      box-shadow: 0 4px 14px rgba(6, 182, 212, 0.35);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Metric cards */
+    .metric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .metric-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .metric-card.full-width {
+      grid-column: span 2;
+      background: rgba(6, 182, 212, 0.08);
+      border-color: rgba(6, 182, 212, 0.3);
+    }
+
+    .metric-title {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 4px;
+    }
+
+    .metric-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .metric-unit {
+      font-size: 12px;
+      font-weight: normal;
+      color: var(--text-muted);
+      margin-left: 3px;
+    }
+
+    .metric-sub {
+      font-size: 11px;
+      color: var(--accent);
+      margin-top: 3px;
+    }
+
+    /* Pulse animation for pond marker */
+    .pond-pin {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: #0284c7;
+      border: 3px solid #fff;
+      border-radius: 50%;
+      color: white;
+      box-shadow: 0 0 15px rgba(2, 132, 199, 0.8);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(2, 132, 199, 0.8); }
+      70% { box-shadow: 0 0 0 16px rgba(2, 132, 199, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(2, 132, 199, 0); }
+    }
+
+    /* Map info badge */
+    .map-badge {
+      position: absolute;
+      top: 16px;
+      left: 60px;
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--card-border);
+      padding: 10px 16px;
+      border-radius: 8px;
+      z-index: 999;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      display: inline-block;
+      box-shadow: 0 0 8px #22c55e;
+    }
+
+    /* Loading overlay */
+    .loading-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(4px);
+      z-index: 2000;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .main-container {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        height: 50%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <i class="fa-solid fa-water"></i>
+      <h1>AI Village Pond Planning System</h1>
+      <span>Phase 2 Live UI</span>
+    </div>
+    <div style="font-size: 13px; color: var(--text-muted);">
+      <span class="status-dot"></span> System Online &bull; <strong>10.1.75.51</strong>
+    </div>
+  </header>
+
+  <div class="main-container">
+    <div id="map"></div>
+
+    <!-- Map Info Overlay Badge -->
+    <div class="map-badge" id="mapBadge">
+      <i class="fa-solid fa-map-location-dot" style="color: var(--accent)"></i>
+      <div>
+        <div style="font-weight: 600;">Interactive Map Viewer</div>
+        <div style="font-size: 11px; color: var(--text-muted);" id="mapStatusText">Draw area or upload KML to delineate catchment</div>
+      </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="spinner"></div>
+      <div style="font-size: 16px; font-weight: 600;" id="loadingText">Processing Terrain & Delineating Catchment...</div>
+      <div style="font-size: 12px; color: var(--text-muted);">Running priority-flood, D8 flow accumulation, and pond site heuristic</div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      
+      <!-- Input Section -->
+      <div class="sidebar-section">
+        <h3><i class="fa-solid fa-sliders"></i> Area & Map Input</h3>
+        
+        <!-- Dropzone -->
+        <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <p>Click or drag & drop <strong>.kml</strong> or <strong>.kmz</strong> contour map</p>
+          <div class="file-name" id="fileNameDisplay"></div>
+        </div>
+        <input type="file" id="fileInput" accept=".kml,.kmz" style="display: none;" onchange="handleFileSelect(event)">
+
+        <div style="margin-top: 12px;" class="btn-group">
+          <button class="btn btn-secondary" onclick="loadSampleContour()" id="btnSample" title="Load pre-bundled Raipur, CG contour dataset">
+            <i class="fa-solid fa-database"></i> Use Demo Contour (6.7MB)
+          </button>
+        </div>
+
+        <div style="margin-top: 14px;" class="form-group">
+          <label><i class="fa-solid fa-draw-polygon"></i> Or Select Land Area on Map:</label>
+          <button class="btn btn-secondary" onclick="enableDrawBox()" id="btnDraw">
+            <i class="fa-solid fa-vector-square"></i> Draw Bounding Box on Map
+          </button>
+        </div>
+      </div>
+
+      <!-- Analysis Parameters -->
+      <div class="sidebar-section">
+        <h3><i class="fa-solid fa-gear"></i> Analysis Settings</h3>
+        
+        <div class="form-group">
+          <label>Grid Resolution (meters):</label>
+          <select class="form-control" id="resolutionInput">
+            <option value="20.0" selected>20 meters (Fast - ~8s, Recommended)</option>
+            <option value="10.0">10 meters (Fine - ~28s)</option>
+            <option value="30.0">30 meters (Ultra-fast - ~3s)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Minimum Catchment Area (m²):</label>
+          <input type="number" class="form-control" id="minAreaInput" value="500" min="100" step="100">
+        </div>
+
+        <div class="form-group">
+          <label>Backend API URL:</label>
+          <input type="text" class="form-control" id="apiUrlInput" value="/analyzeContour" placeholder="http://10.1.75.51:3209/analyzeContour">
+        </div>
+
+        <button class="btn btn-primary" id="btnAnalyze" onclick="runAnalysis()">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Pond Plan
+        </button>
+      </div>
+
+      <!-- Results Section -->
+      <div class="sidebar-section" id="resultsSection" style="display: none;">
+        <h3><i class="fa-solid fa-chart-pie"></i> Planning Results</h3>
+
+        <div class="metric-grid">
+          
+          <!-- Water Volume Banner -->
+          <div class="metric-card full-width">
+            <div class="metric-title"><i class="fa-solid fa-droplet"></i> Expected Water Volume</div>
+            <div class="metric-value" id="resVolumeM3">-- <span class="metric-unit">m³</span></div>
+            <div class="metric-sub" id="resVolumeLiters">-- Liters collected / year</div>
+          </div>
+
+          <!-- Pond Coordinates -->
+          <div class="metric-card">
+            <div class="metric-title"><i class="fa-solid fa-location-dot"></i> Pond Coordinates</div>
+            <div class="metric-value" style="font-size: 14px;" id="resCoords">--</div>
+            <div class="metric-sub" id="resElevation">Elev: -- m</div>
+          </div>
+
+          <!-- Catchment Area -->
+          <div class="metric-card">
+            <div class="metric-title"><i class="fa-solid fa-mountain"></i> Catchment Area</div>
+            <div class="metric-value" id="resAreaHa">-- <span class="metric-unit">ha</span></div>
+            <div class="metric-sub" id="resAreaM2">-- m²</div>
+          </div>
+
+          <!-- Pond Dimensions -->
+          <div class="metric-card">
+            <div class="metric-title"><i class="fa-solid fa-ruler-combined"></i> Pond Sizing</div>
+            <div class="metric-value" id="resPondDepth">-- <span class="metric-unit">m depth</span></div>
+            <div class="metric-sub" id="resPondArea">Area: -- m²</div>
+          </div>
+
+          <!-- Terrain Slope -->
+          <div class="metric-card">
+            <div class="metric-title"><i class="fa-solid fa-arrow-trend-up"></i> Mean Slope</div>
+            <div class="metric-value" id="resSlope">-- <span class="metric-unit">%</span></div>
+            <div class="metric-sub" id="resRelief">Relief: -- m</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 14px; font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between;">
+          <span id="resTime">Execution: -- ms</span>
+          <span id="resContours">Contours: -- lines</span>
+        </div>
+
+        <div style="margin-top: 12px;" class="btn-group">
+          <button class="btn btn-secondary" onclick="exportGeoJson()">
+            <i class="fa-solid fa-download"></i> Export GeoJSON
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Leaflet Draw JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+
+  <script>
+    // -------------------------------------------------------------
+    // Map Initialization
+    // -------------------------------------------------------------
+    // Centered around the reference Raipur, CG area
+    const defaultCenter = [21.263, 81.283];
+    const map = L.map('map', {
+      center: defaultCenter,
+      zoom: 14,
+      zoomControl: true
+    });
+
+    // Tile Layers
+    const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Esri, Maxar, Earthstar Geographics'
+    });
+
+    const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    });
+
+    const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenTopoMap'
+    });
+
+    // Default to Satellite
+    satelliteLayer.addTo(map);
+
+    L.control.layers({
+      "Satellite Imagery": satelliteLayer,
+      "OpenStreetMap": osmLayer,
+      "Topographic Map": topoLayer
+    }, null, { position: 'topright' }).addTo(map);
+
+    // Feature group for drawn items and results
+    const drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+
+    let activeCatchmentLayer = null;
+    let activePondMarker = null;
+    let selectedFile = null;
+    let latestAnalysisResult = null;
+
+    // -------------------------------------------------------------
+    // Area Selection (Draw Box)
+    // -------------------------------------------------------------
+    const drawControl = new L.Control.Draw({
+      draw: {
+        polygon: true,
+        rectangle: true,
+        circle: false,
+        circlemarker: false,
+        marker: false,
+        polyline: false
+      },
+      edit: {
+        featureGroup: drawnItems
+      }
+    });
+
+    function enableDrawBox() {
+      new L.Draw.Rectangle(map, {
+        shapeOptions: {
+          color: '#06b6d4',
+          weight: 2,
+          fillOpacity: 0.15
+        }
+      }).enable();
+      document.getElementById('mapStatusText').innerText = "Click and drag on the map to define the land boundary";
+    }
+
+    map.on(L.Draw.Event.CREATED, function (e) {
+      drawnItems.clearLayers();
+      const layer = e.layer;
+      drawnItems.addLayer(layer);
+      const bounds = layer.getBounds();
+      document.getElementById('mapStatusText').innerText = `Selected Area: ${bounds.toBBoxString()}`;
+    });
+
+    // -------------------------------------------------------------
+    // Drag & Drop Handling
+    // -------------------------------------------------------------
+    const dropzone = document.getElementById('dropzone');
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+      }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+      }, false);
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      if (files.length > 0) {
+        setFile(files[0]);
+      }
+    });
+
+    function handleFileSelect(event) {
+      if (event.target.files.length > 0) {
+        setFile(event.target.files[0]);
+      }
+    }
+
+    function setFile(file) {
+      selectedFile = file;
+      document.getElementById('fileNameDisplay').innerText = `📄 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+    }
+
+    // -------------------------------------------------------------
+    // Load Demo Contour
+    // -------------------------------------------------------------
+    async function loadSampleContour() {
+      const btn = document.getElementById('btnSample');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Fetching Demo File...`;
+
+      try {
+        // Fetch from backend /sampleKml
+        const res = await fetch('/sampleKml');
+        if (!res.ok) throw new Error("Failed to load sample contour from backend.");
+        const blob = await res.blob();
+        selectedFile = new File([blob], "contours_1m.kml", { type: "application/vnd.google-earth.kml+xml" });
+        setFile(selectedFile);
+        btn.innerHTML = `<i class="fa-solid fa-check"></i> Demo Loaded (6.7MB)`;
+      } catch (err) {
+        alert("Notice: Could not load sample KML from /sampleKml. You can upload any .kml file directly.");
+        btn.innerHTML = `<i class="fa-solid fa-database"></i> Use Demo Contour (6.7MB)`;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // -------------------------------------------------------------
+    // Run Analysis
+    // -------------------------------------------------------------
+    async function runAnalysis() {
+      if (!selectedFile) {
+        alert("Please upload a KML/KMZ contour file, or click 'Use Demo Contour'.");
+        return;
+      }
+
+      const apiUrl = document.getElementById('apiUrlInput').value || '/analyzeContour';
+      const resolution = document.getElementById('resolutionInput').value;
+      const minArea = document.getElementById('minAreaInput').value;
+
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('resolution_m', resolution);
+      formData.append('min_catchment_area_m2', minArea);
+
+      // Show loader
+      const overlay = document.getElementById('loadingOverlay');
+      overlay.style.display = 'flex';
+      const t0 = performance.now();
+
+      try {
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.detail || `Server error: HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        latestAnalysisResult = data;
+        displayResults(data);
+      } catch (err) {
+        alert(`Analysis Error: ${err.message}`);
+      } finally {
+        overlay.style.display = 'none';
+      }
+    }
+
+    // -------------------------------------------------------------
+    // Display Results on Map & Sidebar
+    // -------------------------------------------------------------
+    function displayResults(data) {
+      // 1. Clear previous result layers
+      if (activeCatchmentLayer) map.removeLayer(activeCatchmentLayer);
+      if (activePondMarker) map.removeLayer(activePondMarker);
+
+      // 2. Render Catchment Polygon GeoJSON
+      const catchmentGeoJson = data.catchment.boundary_geojson;
+      activeCatchmentLayer = L.geoJSON(catchmentGeoJson, {
+        style: {
+          color: '#06b6d4',
+          weight: 3,
+          dashArray: '6, 6',
+          fillColor: '#0284c7',
+          fillOpacity: 0.35
+        }
+      }).addTo(map);
+
+      // 3. Render Pond Site Marker
+      const lat = data.pond_site.lat;
+      const lon = data.pond_site.lon;
+      const elev = data.pond_site.elevation_m;
+
+      const pondIcon = L.divIcon({
+        className: 'pond-marker-container',
+        html: `<div class="pond-pin"><i class="fa-solid fa-water"></i></div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+
+      activePondMarker = L.marker([lat, lon], { icon: pondIcon }).addTo(map);
+
+      // Popup
+      activePondMarker.bindPopup(`
+        <div style="font-family: 'Inter', sans-serif; color: #0f172a; padding: 4px;">
+          <h4 style="color: #0284c7; margin-bottom: 6px;"><i class="fa-solid fa-water"></i> Optimal Village Pond Site</h4>
+          <p><strong>Coordinates:</strong> ${lat.toFixed(6)}° N, ${lon.toFixed(6)}° E</p>
+          <p><strong>Elevation:</strong> ${elev.toFixed(1)} m</p>
+          <p><strong>Catchment Area:</strong> ${(data.catchment.area_hectares).toFixed(2)} ha (${data.catchment.area_m2.toLocaleString()} m²)</p>
+          <p><strong>Expected Volume:</strong> ${data.catchment.expected_water_volume_m3.toLocaleString()} m³</p>
+          <p><strong>Recommended Depth:</strong> ${data.catchment.recommended_pond_depth_m} m</p>
+        </div>
+      `).openPopup();
+
+      // 4. Zoom to fit Catchment Layer
+      map.fitBounds(activeCatchmentLayer.getBounds(), { padding: [40, 40] });
+
+      // 5. Populate Sidebar Metrics
+      document.getElementById('resultsSection').style.display = 'block';
+      document.getElementById('resVolumeM3').innerHTML = `${data.catchment.expected_water_volume_m3.toLocaleString()} <span class="metric-unit">m³</span>`;
+      document.getElementById('resVolumeLiters').innerText = `${(data.catchment.expected_water_volume_liters / 1000000).toFixed(2)} Million Litres / year`;
+
+      document.getElementById('resCoords').innerText = `${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E`;
+      document.getElementById('resElevation').innerText = `Elevation: ${elev.toFixed(1)} m`;
+
+      document.getElementById('resAreaHa').innerHTML = `${data.catchment.area_hectares.toFixed(2)} <span class="metric-unit">ha</span>`;
+      document.getElementById('resAreaM2').innerText = `${data.catchment.area_m2.toLocaleString()} m²`;
+
+      document.getElementById('resPondDepth').innerHTML = `${data.catchment.recommended_pond_depth_m} <span class="metric-unit">m depth</span>`;
+      document.getElementById('resPondArea').innerText = `Surface Area: ${data.catchment.recommended_pond_surface_area_m2.toLocaleString()} m²`;
+
+      document.getElementById('resSlope').innerHTML = `${data.catchment.mean_slope_pct.toFixed(1)} <span class="metric-unit">%</span>`;
+      document.getElementById('resRelief').innerText = `Relief: ${data.catchment.relief_m} m`;
+
+      document.getElementById('resTime').innerText = `Processing: ${data.processing_time_ms} ms`;
+      document.getElementById('resContours').innerText = `Contours: ${data.total_contour_lines} lines`;
+
+      document.getElementById('mapStatusText').innerText = `Pond planned at (${lat.toFixed(4)}°, ${lon.toFixed(4)}°) with ${data.catchment.area_hectares} ha catchment`;
+    }
+
+    // -------------------------------------------------------------
+    // Export GeoJSON
+    // -------------------------------------------------------------
+    function exportGeoJson() {
+      if (!latestAnalysisResult) return;
+      const geojsonStr = JSON.stringify(latestAnalysisResult.catchment.boundary_geojson, null, 2);
+      const blob = new Blob([geojsonStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = "village_pond_catchment.geojson";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

@@ -69,6 +69,19 @@ async def health():
     return {"status": "ok"}
 
 
+@router.get("/sampleKml")
+async def get_sample_kml():
+    """Download the preloaded sample 1m contour KML file."""
+    sample_path = Path(__file__).resolve().parent.parent.parent / "contours_1m.kml"
+    if not sample_path.exists():
+        raise HTTPException(status_code=404, detail="Sample contour file not found.")
+    return FileResponse(
+        str(sample_path),
+        media_type="application/vnd.google-earth.kml+xml",
+        filename="contours_1m.kml",
+    )
+
+
 @router.post("/analyzeContour", response_model=AnalyzeContourResponse)
 async def analyze_contour(
     file: UploadFile = File(..., description="KML or KMZ contour map"),

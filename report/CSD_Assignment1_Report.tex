@@ -514,13 +514,20 @@ natural avenues for future development:
 \section{AI Tool Usage Declaration}
 \label{sec:ai-usage}
 
-The Antigravity AI coding assistant (powered by Google DeepMind / Gemini and Anthropic Claude models)
-was utilized as a pair-programming tool during development. Specific applications included:
-scaffolding initial FastAPI route structures, formulating vectorised NumPy array slicing for D8 direction,
-identifying an inverted row-slice bug that caused uphill drainage routing, generating mock KML fixtures
-for \texttt{pytest}, drafting the socket forwarder script (\texttt{port\_bridge.py}), and formatting LaTeX tables.
+In accordance with academic integrity guidelines, we declare the use of AI assistance during this project.
+The Antigravity AI coding assistant~\cite{antigravity2024}, powered by Google DeepMind's Gemini~\cite{gemini2024}
+and Anthropic's Claude~\cite{claude2024}, was utilized as an interactive pair-programming and debugging tool.
+Specific applications included:
+\begin{itemize}
+  \item Scaffolding initial FastAPI route structures and Pydantic validation schemas.
+  \item Formulating vectorised NumPy array slicing for the D8 flow-direction algorithm.
+  \item Diagnosing and resolving an inverted row-slice index error in flow routing.
+  \item Generating mock KML geometry fixtures for the 25-case automated test suite.
+  \item Drafting the multi-port TCP forwarder (\texttt{port\_bridge.py}) for container deployment.
+  \item Formatting LaTeX tables and mathematical equation blocks.
+\end{itemize}
 All generated algorithms, mathematical formulas, and numerical outputs were independently verified,
-tested against physical hydrology constraints, and reviewed line-by-line.
+tested against physical hydrology constraints, and reviewed line-by-line. No AI tool was used to fabricate results or citations.
 
 %% =====================================================================
 \appendix
@@ -537,6 +544,10 @@ tested against physical hydrology constraints, and reviewed line-by-line.
     ssh -N -L 3209:localhost:3209 -L 4209:localhost:4209 -p 2209 student@10.1.75.51
     \end{verbatim}
 \end{itemize}
+
+%% =================== REFERENCES =====================================
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{sample-base}
 
 \end{document}
 \endinput

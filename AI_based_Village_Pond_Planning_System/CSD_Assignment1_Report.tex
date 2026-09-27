@@ -134,7 +134,7 @@ Table~\ref{tab:requirements} summarizes the mapping of requirements to implement
     Rational runoff volume estimation & \texttt{app/pond/selector.py} \\
     FastAPI REST endpoints & \texttt{app/api/routes.py} \\
     Interactive Leaflet map frontend & \texttt{frontend/index.html} \\
-    TCP bridge \& process supervisor & \texttt{port_bridge.py}, \texttt{runner.sh} \\
+    TCP bridge \& process supervisor & \texttt{port\_bridge.py}, \texttt{runner.sh} \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -204,7 +204,7 @@ an interactive presentation tier, and a background supervisor harness.
     Shapely 2.0+ for 2D polygon union, simplification, and GeoJSON serialisation.
   \item \textbf{Parsing Engine:} \texttt{lxml} and Python standard \texttt{zipfile} for memory-efficient XML streaming.
   \item \textbf{Frontend UI:} Leaflet.js 1.9, Leaflet-Draw, FontAwesome, Esri World Imagery, and OpenStreetMap tiles.
-  \item \textbf{Process Management:} Bash supervisor daemon (\texttt{runner.sh}), non-blocking TCP socket bridge (\texttt{port_bridge.py}),
+  \item \textbf{Process Management:} Bash supervisor daemon (\texttt{runner.sh}), non-blocking TCP socket bridge (\texttt{port\_bridge.py}),
     and system \texttt{crontab} with \texttt{@reboot} trigger.
 \end{itemize}
 
@@ -398,7 +398,7 @@ operational web interface running live on \texttt{http://10.1.75.51:4209/}. Key 
 The application runs inside Docker container \texttt{stu3\_sys1} on physical host \texttt{10.1.75.51}.
 Because external ports \texttt{3209} and \texttt{4209} are mapped to the container while internal
 services bind to standard ports \texttt{3000} (Uvicorn) and \texttt{4000} (Frontend), a lightweight,
-non-blocking TCP socket bridge (\texttt{port_bridge.py}) transparently routes traffic between:
+non-blocking TCP socket bridge (\texttt{port\_bridge.py}) transparently routes traffic between:
 \begin{center}
   \texttt{0.0.0.0:3209} $\longrightarrow$ \texttt{127.0.0.1:3000} \quad \text{and} \quad
   \texttt{0.0.0.0:4209} $\longrightarrow$ \texttt{127.0.0.1:4000}
@@ -427,7 +427,7 @@ continuous availability across system restarts.
       Prevents kernel Out-Of-Memory (OOM) termination on a 512~MB container while maintaining sub-meter vertical precision. \\
     System Reliability & Infinite supervisor watchdog loop (\texttt{runner.sh}); \texttt{crontab @reboot} &
       Ensures zero-maintenance service recovery after process crashes or container reboots without requiring systemd PID 1. \\
-    Network Architecture & Multi-port TCP forwarder (\texttt{port_bridge.py}); CORS middleware &
+    Network Architecture & Multi-port TCP forwarder (\texttt{port\_bridge.py}); CORS middleware &
       Solves Docker host-to-container port mismatch without needing root-level iptables or heavy Nginx installations. \\
     Automated Testing & 25 unit and integration tests using \texttt{pytest} &
       Verifies parser edge cases, terrain routing physics, DEM boundaries, and end-to-end API upload contracts before deployment. \\
@@ -518,7 +518,7 @@ The Antigravity AI coding assistant (powered by Google DeepMind / Gemini and Ant
 was utilized as a pair-programming tool during development. Specific applications included:
 scaffolding initial FastAPI route structures, formulating vectorised NumPy array slicing for D8 direction,
 identifying an inverted row-slice bug that caused uphill drainage routing, generating mock KML fixtures
-for \texttt{pytest}, drafting the socket forwarder script (\texttt{port_bridge.py}), and formatting LaTeX tables.
+for \texttt{pytest}, drafting the socket forwarder script (\texttt{port\_bridge.py}), and formatting LaTeX tables.
 All generated algorithms, mathematical formulas, and numerical outputs were independently verified,
 tested against physical hydrology constraints, and reviewed line-by-line.
 

@@ -61,6 +61,13 @@ class CatchmentResult:
     max_elevation_m: float
     relief_m: float
     watershed_cell_count: int
+    annual_rainfall_mm: float
+    runoff_coefficient: float
+    expected_water_volume_m3: float
+    expected_water_volume_liters: float
+    recommended_pond_depth_m: float
+    recommended_pond_surface_area_m2: float
+    recommended_storage_capacity_m3: float
     boundary_geojson: dict    # GeoJSON Polygon
 
 
@@ -259,6 +266,22 @@ def select_pond_and_delineate(
     polygon = _mask_to_polygon(mask, dem_result)
     geojson = mapping(polygon)
 
+    # ---- Water volume and pond sizing (rational method) ----
+    # Central India representative annual rainfall ~800mm
+    annual_rainfall_mm = 800.0
+    if mean_slope < 5.0:
+        runoff_coeff = 0.35
+    elif mean_slope < 10.0:
+        runoff_coeff = 0.45
+    else:
+        runoff_coeff = 0.55
+    rainfall_m = annual_rainfall_mm / 1000.0
+    water_volume_m3 = round(rainfall_m * area_m2 * runoff_coeff, 2)
+    water_volume_liters = round(water_volume_m3 * 1000.0, 2)
+    pond_depth = max(0.5, min(round(relief * 0.5, 2), 3.0))
+    pond_surface_area = round(water_volume_m3 / pond_depth, 2)
+    storage_capacity_m3 = round(pond_surface_area * pond_depth, 2)
+
     return CatchmentResult(
         pond_site=pond_site,
         mask=mask,
@@ -270,5 +293,12 @@ def select_pond_and_delineate(
         max_elevation_m=round(max_elev, 2),
         relief_m=relief,
         watershed_cell_count=watershed_cells,
+        annual_rainfall_mm=annual_rainfall_mm,
+        runoff_coefficient=runoff_coeff,
+        expected_water_volume_m3=water_volume_m3,
+        expected_water_volume_liters=water_volume_liters,
+        recommended_pond_depth_m=pond_depth,
+        recommended_pond_surface_area_m2=pond_surface_area,
+        recommended_storage_capacity_m3=storage_capacity_m3,
         boundary_geojson=dict(geojson),
     )

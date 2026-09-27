@@ -38,6 +38,13 @@ class CatchmentSchema(BaseModel):
     max_elevation_m: float
     relief_m: float
     watershed_cell_count: int
+    annual_rainfall_mm: float
+    runoff_coefficient: float
+    expected_water_volume_m3: float
+    expected_water_volume_liters: float
+    recommended_pond_depth_m: float
+    recommended_pond_surface_area_m2: float
+    recommended_storage_capacity_m3: float
     boundary_geojson: dict
 
 
@@ -82,7 +89,6 @@ async def analyze_contour(
 
     # --- Parse ---
     try:
-        # Write to a temp file to avoid buffering huge uploads in RAM
         with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:
             tmp_path = Path(tmp.name)
             content = await file.read()
@@ -155,6 +161,13 @@ async def analyze_contour(
             max_elevation_m=catchment.max_elevation_m,
             relief_m=catchment.relief_m,
             watershed_cell_count=catchment.watershed_cell_count,
+            annual_rainfall_mm=catchment.annual_rainfall_mm,
+            runoff_coefficient=catchment.runoff_coefficient,
+            expected_water_volume_m3=catchment.expected_water_volume_m3,
+            expected_water_volume_liters=catchment.expected_water_volume_liters,
+            recommended_pond_depth_m=catchment.recommended_pond_depth_m,
+            recommended_pond_surface_area_m2=catchment.recommended_pond_surface_area_m2,
+            recommended_storage_capacity_m3=catchment.recommended_storage_capacity_m3,
             boundary_geojson=catchment.boundary_geojson,
         ),
         processing_time_ms=round(elapsed_ms, 1),

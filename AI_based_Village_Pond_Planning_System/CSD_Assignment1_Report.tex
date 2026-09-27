@@ -371,7 +371,8 @@ Figure~\ref{fig:postman} demonstrates a live query executed against the containe
 \subsection{Interactive Web Frontend}
 
 The frontend is implemented as a responsive single-page application in HTML5, CSS3, and Leaflet.js
-served on port 4000 (accessible over network port 4209). Key features include:
+served on port 4000 (accessible over network port 4209). Figure~\ref{fig:frontend_ui} shows the
+operational web interface running live on \texttt{http://10.1.75.51:4209/}. Key features include:
 \begin{itemize}
   \item \textbf{Dual Base Maps:} Smooth layer toggling between Esri High-Resolution World Imagery and OpenStreetMap.
   \item \textbf{Area Selection on Map:} Integrated Leaflet-Draw tools allowing planners to drag a bounding box
@@ -383,6 +384,14 @@ served on port 4000 (accessible over network port 4209). Key features include:
   \item \textbf{Metrics Sidebar:} Live display of expected harvest volume (m\textsuperscript{3} and Million Litres),
     pond surface area and depth, catchment hectares, average slope, and GeoJSON export.
 \end{itemize}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\linewidth]{frontend_ui_screenshot}
+  \caption{Operational web frontend interface running on container port 4209 (\texttt{http://10.1.75.51:4209/}), displaying high-resolution satellite imagery of the Raipur study area, interactive bounding-box selection tools, analysis settings, and direct backend API connection.}
+  \label{fig:frontend_ui}
+  \Description{Web browser screenshot displaying the AI Village Pond Planning System interface with satellite map and planning control sidebar.}
+\end{figure}
 
 \subsection{Container Deployment and Port Bridge}
 

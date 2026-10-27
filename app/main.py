@@ -113,11 +113,185 @@ async def get_dashboard_logs():
 # 7. Include API router
 app.include_router(router)
 
-# 8. Mount frontend if it exists
-frontend_dir = Path(__file__).resolve().parent.parent / "frontend"
-if frontend_dir.exists():
-    app.mount("/static", StaticFiles(directory=str(frontend_dir)), name="static")
+BACKEND_GATEWAY_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Backend API & Observability Gateway | Village Pond Planning</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card: #0f172a;
+      --border: rgba(255, 255, 255, 0.1);
+      --primary: #38bdf8;
+      --accent: #06b6d4;
+      --success: #22c55e;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+    }
+    .container {
+      max-width: 860px;
+      width: 100%;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .header h1 {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    .header h1 i { color: var(--primary); }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: var(--success);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .header p {
+      color: var(--text-muted);
+      margin-top: 12px;
+      font-size: 14px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.25s ease;
+    }
+    .card:hover {
+      border-color: var(--primary);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 24px -10px rgba(56, 189, 248, 0.25);
+    }
+    .card-icon {
+      font-size: 28px;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-title i { font-size: 14px; color: var(--text-muted); }
+    .card-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 16px;
+      flex: 1;
+    }
+    .card-endpoint {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--primary);
+      word-break: break-all;
+    }
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+    }
+    .footer code {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="badge"><i class="fa-solid fa-circle-check"></i> System Online &bull; Container: stu3_sys1</div>
+      <h1 style="margin-top:16px;"><i class="fa-solid fa-server"></i> Village Pond Planning Backend</h1>
+      <p>Civil Hydrology Analysis Engine &bull; OpenTelemetry Observability Gateway &bull; Port 3209</p>
+    </div>
 
-    @app.get("/", include_in_schema=False)
-    async def serve_frontend():
-        return FileResponse(str(frontend_dir / "index.html"))
+    <div class="grid">
+      <a href="/telemetry" class="card" style="border-color: rgba(56, 189, 248, 0.4);">
+        <div class="card-icon" style="color: #38bdf8;"><i class="fa-solid fa-chart-line"></i></div>
+        <div class="card-title">OpenTelemetry Dashboard <i class="fa-solid fa-arrow-up-right-from-square"></i></div>
+        <div class="card-desc">Interactive trace waterfall, stage execution breakdown, and correlated structured logs.</div>
+        <div class="card-endpoint">GET /telemetry</div>
+      </a>
+
+      <a href="/metrics" class="card">
+        <div class="card-icon" style="color: #22c55e;"><i class="fa-solid fa-gauge-high"></i></div>
+        <div class="card-title">Prometheus Metrics <i class="fa-solid fa-arrow-up-right-from-square"></i></div>
+        <div class="card-desc">Standard Prometheus pull metrics endpoint tracking request rates, durations, and hydrology gauges.</div>
+        <div class="card-endpoint">GET /metrics</div>
+      </a>
+
+      <a href="/docs" class="card">
+        <div class="card-icon" style="color: #f59e0b;"><i class="fa-solid fa-book-open"></i></div>
+        <div class="card-title">Swagger API Docs <i class="fa-solid fa-arrow-up-right-from-square"></i></div>
+        <div class="card-desc">Interactive OpenAPI documentation for testing /analyzeContour and JSON telemetry endpoints.</div>
+        <div class="card-endpoint">GET /docs</div>
+      </a>
+
+      <a href="http://10.1.75.51:4209/" class="card" target="_blank">
+        <div class="card-icon" style="color: #06b6d4;"><i class="fa-solid fa-map-location-dot"></i></div>
+        <div class="card-title">GIS Map Frontend <i class="fa-solid fa-arrow-up-right-from-square"></i></div>
+        <div class="card-desc">Satellite contour map UI with interactive pond delineation, catchment rendering, and GeoJSON export.</div>
+        <div class="card-endpoint">http://10.1.75.51:4209/</div>
+      </a>
+    </div>
+
+    <div class="footer">
+      Python 3.12 &bull; FastAPI 0.115 &bull; OpenTelemetry SDK 1.45.1 &bull; Container: <code>stu3_sys1 (10.1.75.51)</code>
+    </div>
+  </div>
+</body>
+</html>
+"""
+
+# 8. Mount Backend Gateway at root
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+async def serve_backend_gateway():
+    """Serves the Backend Gateway portal distinguishing port 3209 from port 4209."""
+    return HTMLResponse(content=BACKEND_GATEWAY_HTML)

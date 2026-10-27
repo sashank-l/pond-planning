@@ -269,7 +269,7 @@ HTML_DASHBOARD = """<!DOCTYPE html>
 
     async function loadTraces() {
       try {
-        const res = await fetch('/api/spans');
+        const res = await fetch('/api/spans?t=' + Date.now());
         const data = await res.json();
         const list = document.getElementById('traceList');
         if (!data.spans || data.spans.length === 0) {
@@ -335,40 +335,33 @@ HTML_DASHBOARD = """<!DOCTYPE html>
 
     async function loadMetrics() {
       try {
-        const res = await fetch('/api/metrics');
-        const text = await res.text();
-        document.getElementById('rawMetrics').innerText = text;
-
-        function extractVal(metricName) {
-          const match = text.match(new RegExp('^[ \\t]*' + metricName + '(?:\\{[^}]*\\})?\\s+([0-9.eE+-]+)', 'm'));
-          return (match && !isNaN(parseFloat(match[1]))) ? parseFloat(match[1]) : null;
+        const res = await fetch('/api/metrics_json?t=' + Date.now());
+        const d = await res.json();
+        if (d.raw_prometheus) {
+          document.getElementById('rawMetrics').innerText = d.raw_prometheus;
         }
 
-        const reqs = extractVal('pond_analysis_requests_total');
-        const duration = extractVal('pond_analysis_duration_seconds_sum');
-        const area = extractVal('pond_catchment_area_square_meters');
-        const vol = extractVal('pond_expected_water_volume_cubic_meters');
-        const lines = extractVal('pond_contour_lines_count');
-        const cells = extractVal('pond_dem_grid_cells_total');
-        const relief = extractVal('pond_topographic_relief_meters');
-        const depth = extractVal('pond_recommended_depth_meters');
-
-        if (reqs !== null && !isNaN(reqs)) document.getElementById('mRequests').innerText = reqs;
-        if (duration !== null && !isNaN(duration)) document.getElementById('mDuration').innerHTML = duration.toFixed(2) + ' <span class="metric-unit">sec</span>';
-        if (area !== null && !isNaN(area)) document.getElementById('mArea').innerHTML = area.toLocaleString() + ' <span class="metric-unit">m²</span>';
-        if (vol !== null && !isNaN(vol)) document.getElementById('mVolume').innerHTML = vol.toLocaleString() + ' <span class="metric-unit">m³</span>';
-        if (lines !== null && !isNaN(lines)) document.getElementById('mContours').innerText = lines.toLocaleString();
-        if (cells !== null && !isNaN(cells)) document.getElementById('mCells').innerText = cells.toLocaleString();
-        if (relief !== null && !isNaN(relief)) document.getElementById('mRelief').innerHTML = relief.toFixed(1) + ' <span class="metric-unit">m</span>';
-        if (depth !== null && !isNaN(depth)) document.getElementById('mDepth').innerHTML = depth.toFixed(1) + ' <span class="metric-unit">m</span>';
+        if (d.requests_total != null) document.getElementById('mRequests').innerText = d.requests_total;
+        if (d.duration_sec != null) document.getElementById('mDuration').innerHTML = d.duration_sec.toFixed(2) + ' <span class="metric-unit">sec</span>';
+        if (d.catchment_area_m2 != null) document.getElementById('mArea').innerHTML = d.catchment_area_m2.toLocaleString() + ' <span class="metric-unit">m²</span>';
+        if (d.water_volume_m3 != null) document.getElementById('mVolume').innerHTML = d.water_volume_m3.toLocaleString() + ' <span class="metric-unit">m³</span>';
+        if (d.contour_lines != null) document.getElementById('mContours').innerText = d.contour_lines.toLocaleString();
+        if (d.dem_grid_cells != null) document.getElementById('mCells').innerText = d.dem_grid_cells.toLocaleString();
+        if (d.relief_m != null) document.getElementById('mRelief').innerHTML = d.relief_m.toFixed(1) + ' <span class="metric-unit">m</span>';
+        if (d.depth_m != null) document.getElementById('mDepth').innerHTML = d.depth_m.toFixed(1) + ' <span class="metric-unit">m</span>';
       } catch (e) {
-        console.error(e);
+        console.error('loadMetrics error:', e);
+        try {
+          const res = await fetch('/api/metrics');
+          const text = await res.text();
+          document.getElementById('rawMetrics').innerText = text;
+        } catch (_) {}
       }
     }
 
     async function loadLogs() {
       try {
-        const res = await fetch('/api/logs');
+        const res = await fetch('/api/logs?t=' + Date.now());
         const text = await res.text();
         const terminal = document.getElementById('logTerminal');
         const lines = text.trim().split('\\n');
@@ -390,8 +383,10 @@ HTML_DASHBOARD = """<!DOCTYPE html>
       return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
-    // Auto-refresh traces initially
+    // Auto-refresh all views on page load
     loadTraces();
+    loadMetrics();
+    loadLogs();
   </script>
 </body>
 </html>
@@ -426,6 +421,18 @@ class TelemetryHandler(http.server.BaseHTTPRequestHandler):
                 except Exception:
                     pass
             body = json.dumps({"spans": spans[-100:], "count": len(spans)}).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        elif parsed.path == "/api/metrics_json":
+            try:
+                req = urllib.request.urlopen("http://127.0.0.1:3000/api/metrics_json", timeout=2)
+                body = req.read()
+            except Exception as exc:
+                body = json.dumps({"error": str(exc)}).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(body)))

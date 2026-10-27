@@ -371,8 +371,13 @@
       <h1>AI Village Pond Planning System</h1>
       <span>Phase 2 Live UI</span>
     </div>
-    <div style="font-size: 13px; color: var(--text-muted);">
-      <span class="status-dot"></span> System Online &bull; <strong>10.1.75.51</strong>
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <a id="telemetryLink" href="http://10.1.75.51:3209/telemetry" target="_blank" class="btn btn-secondary" style="width: auto; padding: 6px 12px; font-size: 12px; text-decoration: none;">
+        <i class="fa-solid fa-chart-line" style="color: #38bdf8;"></i> Telemetry & Traces (:3209)
+      </a>
+      <div style="font-size: 13px; color: var(--text-muted);">
+        <span class="status-dot"></span> System Online &bull; <strong>10.1.75.51</strong>
+      </div>
     </div>
   </header>
 
@@ -497,6 +502,18 @@
         <div style="margin-top: 14px; font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between;">
           <span id="resTime">Execution: -- ms</span>
           <span id="resContours">Contours: -- lines</span>
+        </div>
+
+        <!-- OpenTelemetry Trace ID Card -->
+        <div style="margin-top: 12px; padding: 10px 12px; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 6px;">
+          <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; display: flex; justify-content: space-between;">
+            <span><i class="fa-solid fa-fingerprint" style="color: #38bdf8;"></i> OpenTelemetry Trace ID</span>
+            <span style="color: #22c55e; font-size: 10px;"><i class="fa-solid fa-circle-check"></i> Instrumented</span>
+          </div>
+          <div style="font-family: monospace; font-size: 11px; color: #38bdf8; word-break: break-all; margin: 4px 0;" id="resTraceId">--</div>
+          <a id="btnViewTrace" href="http://10.1.75.51:3209/telemetry" target="_blank" style="font-size: 11px; color: #06b6d4; text-decoration: none; font-weight: 500;">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Inspect Waterfall Spans in Dashboard &rarr;
+          </a>
         </div>
 
         <div style="margin-top: 12px;" class="btn-group">

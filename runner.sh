@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# runner.sh — Endless supervisor loop for Backend (3000), Frontend (4000), and Port Bridge (3209, 4209)
+# runner.sh — Endless supervisor loop for Backend, Frontend, OpenTelemetry Dashboard, Jaeger, and Port Bridge
 APP_DIR="/home/student/pond_panning"
 LOG_FILE="$APP_DIR/supervisor.log"
 
@@ -18,12 +18,23 @@ while true; do
         nohup "$APP_DIR/.venv/bin/python3" "$APP_DIR/frontend_server.py" >> "$APP_DIR/frontend_4000.log" 2>&1 &
     fi
 
-    # 3. Ensure Port Bridge (3209->3000, 4209->4000) is running
-    if ! ss -tulpn | grep -q ":3209 " || ! ss -tulpn | grep -q ":4209 "; then
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting Port Bridge (3209->3000, 4209->4000)..." >> "$LOG_FILE"
+    # 3. Ensure OpenTelemetry Dashboard is running on port 5200
+    if ! ss -tulpn | grep -q ":5200 "; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting OpenTelemetry Dashboard on port 5200..." >> "$LOG_FILE"
+        nohup "$APP_DIR/.venv/bin/python3" "$APP_DIR/telemetry_server.py" >> "$APP_DIR/telemetry_5200.log" 2>&1 &
+    fi
+
+    # 4. Ensure Jaeger All-in-One is running (if binary present)
+    if [ -f "$APP_DIR/jaeger-all-in-one" ] && ! ss -tulpn | grep -q ":16686 "; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting Jaeger All-in-One on port 16686..." >> "$LOG_FILE"
+        nohup "$APP_DIR/jaeger-all-in-one" >> "$APP_DIR/jaeger.log" 2>&1 &
+    fi
+
+    # 5. Ensure Multi-Port Bridge is running (3209->3000, 4209->4000, 5209->5200, 6209->16686, 7209->4318)
+    if ! ss -tulpn | grep -q ":3209 " || ! ss -tulpn | grep -q ":5209 "; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting Multi-Port Bridge..." >> "$LOG_FILE"
         nohup "$APP_DIR/.venv/bin/python3" "$APP_DIR/port_bridge.py" >> "$APP_DIR/port_bridge.log" 2>&1 &
     fi
 
     sleep 5
 done
-

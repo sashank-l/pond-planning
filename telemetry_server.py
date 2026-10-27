@@ -340,11 +340,12 @@ HTML_DASHBOARD = """<!DOCTYPE html>
         document.getElementById('rawMetrics').innerText = text;
 
         function extractVal(metricName) {
-          const match = text.match(new RegExp(`^${metricName}(\\{[^}]*\\})?\\s+([0-9.]+)`, 'm'));
-          return match ? parseFloat(match[2]) : null;
+          const match = text.match(new RegExp('^[ \\t]*' + metricName + '(?:\\{[^}]*\\})?\\s+([0-9.eE+-]+)', 'm'));
+          return (match && !isNaN(parseFloat(match[1]))) ? parseFloat(match[1]) : null;
         }
 
         const reqs = extractVal('pond_analysis_requests_total');
+        const duration = extractVal('pond_analysis_duration_seconds_sum');
         const area = extractVal('pond_catchment_area_square_meters');
         const vol = extractVal('pond_expected_water_volume_cubic_meters');
         const lines = extractVal('pond_contour_lines_count');
@@ -352,13 +353,14 @@ HTML_DASHBOARD = """<!DOCTYPE html>
         const relief = extractVal('pond_topographic_relief_meters');
         const depth = extractVal('pond_recommended_depth_meters');
 
-        if (reqs !== null) document.getElementById('mRequests').innerText = reqs;
-        if (area !== null) document.getElementById('mArea').innerText = area.toLocaleString();
-        if (vol !== null) document.getElementById('mVolume').innerText = vol.toLocaleString();
-        if (lines !== null) document.getElementById('mContours').innerText = lines.toLocaleString();
-        if (cells !== null) document.getElementById('mCells').innerText = cells.toLocaleString();
-        if (relief !== null) document.getElementById('mRelief').innerText = relief.toFixed(1);
-        if (depth !== null) document.getElementById('mDepth').innerText = depth.toFixed(1);
+        if (reqs !== null && !isNaN(reqs)) document.getElementById('mRequests').innerText = reqs;
+        if (duration !== null && !isNaN(duration)) document.getElementById('mDuration').innerHTML = duration.toFixed(2) + ' <span class="metric-unit">sec</span>';
+        if (area !== null && !isNaN(area)) document.getElementById('mArea').innerHTML = area.toLocaleString() + ' <span class="metric-unit">m²</span>';
+        if (vol !== null && !isNaN(vol)) document.getElementById('mVolume').innerHTML = vol.toLocaleString() + ' <span class="metric-unit">m³</span>';
+        if (lines !== null && !isNaN(lines)) document.getElementById('mContours').innerText = lines.toLocaleString();
+        if (cells !== null && !isNaN(cells)) document.getElementById('mCells').innerText = cells.toLocaleString();
+        if (relief !== null && !isNaN(relief)) document.getElementById('mRelief').innerHTML = relief.toFixed(1) + ' <span class="metric-unit">m</span>';
+        if (depth !== null && !isNaN(depth)) document.getElementById('mDepth').innerHTML = depth.toFixed(1) + ' <span class="metric-unit">m</span>';
       } catch (e) {
         console.error(e);
       }

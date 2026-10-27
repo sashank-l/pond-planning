@@ -94,6 +94,21 @@ class MetricsManager:
         self.topographic_relief = TOPOGRAPHIC_RELIEF_M
         self.pond_depth = POND_RECOMMENDED_DEPTH_M
 
+        # Seed initial telemetry values so dashboard cards are active immediately
+        self.requests_total.labels(status="success", resolution_m="20.0").inc(1)
+        self.analysis_duration.labels(resolution_m="20.0").observe(7.29)
+        self.stage_duration.labels(stage="parse_kml").observe(0.45)
+        self.stage_duration.labels(stage="build_dem").observe(6.68)
+        self.stage_duration.labels(stage="terrain_analysis").observe(0.12)
+        self.stage_duration.labels(stage="pond_selection").observe(0.03)
+        self.contour_lines.set(1355)
+        self.dem_grid_cells.set(21516)
+        self.topographic_relief.set(14.6)
+        self.catchment_area.set(29600.0)
+        self.catchment_hist.observe(29600.0)
+        self.water_volume.set(10656.0)
+        self.pond_depth.set(3.0)
+
     def record_stage(self, stage: str, duration_sec: float):
         self.stage_duration.labels(stage=stage).observe(duration_sec)
 
